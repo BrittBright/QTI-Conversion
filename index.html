@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QTI Word Studio</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to converter</a>
+  <header class="hero">
+    <div class="wrap">
+      <div class="brand-lockup">
+        <img src="assets/brightpoint-logo.png" alt="Brightpoint Community College">
+        <div>
+          <p class="eyebrow">Center for Teaching and Learning · Faculty tool</p>
+          <h1>QTI <span aria-hidden="true">⇄</span><span class="sr-only">to and from</span> Word Studio</h1>
+          <p class="lede">Convert Canvas QTI packages into editable Word documents—and turn a structured Word document back into a Canvas-ready QTI package.</p>
+          <div class="privacy-note"><strong>Your files stay on this device.</strong> Conversion happens in your browser. Nothing is uploaded or stored.</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="wrap">
+    <section class="mode-switch" aria-label="Choose a conversion direction">
+      <button class="mode active" id="mode-qti" type="button" aria-pressed="true">QTI to Word</button>
+      <button class="mode" id="mode-word" type="button" aria-pressed="false">Word to QTI</button>
+    </section>
+
+    <section class="panel" id="qti-panel" aria-labelledby="qti-heading">
+      <div class="panel-heading">
+        <div><p class="step">Direction 1</p><h2 id="qti-heading">Convert a QTI package to Word</h2></div>
+        <span class="badge">.zip → .docx</span>
+      </div>
+      <div class="directions" aria-labelledby="qti-directions-heading">
+        <h3 id="qti-directions-heading">Before you begin</h3>
+        <ol>
+          <li>Export the quiz from Canvas as a QTI ZIP package. Do not unzip it.</li>
+          <li>Upload the ZIP below and review the question preview and any warnings.</li>
+          <li>Download the Word document and verify the question text, answer choices, correct answers, points, and feedback.</li>
+        </ol>
+        <p><strong>Limitations:</strong> Version 1 supports multiple choice, multiple answer, True/False, essay, short answer, and text-only directions. Question-bank references, randomized groups, unsupported question types, embedded media, and complex mathematics may require manual review or may not convert.</p>
+      </div>
+      <label class="drop-zone" id="qti-drop" for="qti-file">
+        <span class="drop-title">Choose or drop a Canvas QTI ZIP</span>
+        <span class="drop-help">The converter will inspect the package before creating the Word document.</span>
+        <input id="qti-file" type="file" accept=".zip,application/zip">
+      </label>
+      <div id="qti-status" class="status" role="status" aria-live="polite"></div>
+      <div id="qti-results" hidden>
+        <div class="summary" id="qti-summary"></div>
+        <div class="actions">
+          <button id="download-docx" class="primary" type="button">Download Word document</button>
+          <button id="reset-qti" class="secondary" type="button">Start over</button>
+        </div>
+        <div id="qti-warnings" class="warnings" hidden></div>
+        <h3>Question preview</h3>
+        <div id="qti-preview" class="preview"></div>
+      </div>
+    </section>
+
+    <section class="panel" id="word-panel" aria-labelledby="word-heading" hidden>
+      <div class="panel-heading">
+        <div><p class="step">Direction 2</p><h2 id="word-heading">Convert a structured Word document to QTI</h2></div>
+        <span class="badge">.docx → .zip</span>
+      </div>
+      <div class="directions" aria-labelledby="word-directions-heading">
+        <h3 id="word-directions-heading">Before you begin</h3>
+        <ol>
+          <li>Download and use the provided Word template. Keep the bracketed <code>[[QUESTION]]</code> markers and field labels intact.</li>
+          <li>Mark correct choices with an asterisk, such as <code>*b. Mitochondrion</code>.</li>
+          <li>Upload the completed DOCX and correct every validation error before downloading the QTI package.</li>
+          <li>Import the ZIP into an unpublished Canvas sandbox quiz and verify every question in Build and Student Preview before publishing.</li>
+        </ol>
+        <p><strong>Limitations:</strong> The converter reads only the supported template structure; it does not interpret arbitrary Word documents. Images, equations, tables inside question stems, question groups, outcomes, bank-selection rules, and advanced New Quizzes question types are not yet generated.</p>
+      </div>
+      <div class="template-box">
+        <div><h3>Start with the template</h3><p>The markers let the converter identify question types, points, choices, answers, and feedback without guessing.</p></div>
+        <button id="download-template" class="secondary" type="button">Download Word template</button>
+      </div>
+      <label class="drop-zone" id="word-drop" for="word-file">
+        <span class="drop-title">Choose or drop a completed Word template</span>
+        <span class="drop-help">Only .docx files are supported. A validation report appears before download.</span>
+        <input id="word-file" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+      </label>
+      <div id="word-status" class="status" role="status" aria-live="polite"></div>
+      <div id="word-results" hidden>
+        <div class="summary" id="word-summary"></div>
+        <label for="quiz-title">Quiz title</label>
+        <input id="quiz-title" class="text-input" type="text" value="Imported Quiz">
+        <div id="word-errors" class="errors" hidden></div>
+        <div class="actions">
+          <button id="download-qti" class="primary" type="button">Download Canvas QTI package</button>
+          <button id="reset-word" class="secondary" type="button">Start over</button>
+        </div>
+        <h3>Question preview</h3>
+        <div id="word-preview" class="preview"></div>
+      </div>
+    </section>
+
+    <section class="support panel" aria-labelledby="supported-heading">
+      <h2 id="supported-heading">Conversion safeguards and limitations</h2>
+      <p>This tool reduces repetitive quiz entry; it does not replace instructor review. A successful download or Canvas import does not prove that every question was interpreted correctly.</p>
+      <div class="support-grid">
+        <div><h3>Supported</h3><ul><li>Multiple choice</li><li>Multiple answer</li><li>True/False</li><li>Essay</li><li>Short answer</li><li>Text-only directions</li><li>Points and general feedback</li></ul></div>
+        <div><h3>Flagged for review</h3><ul><li>Question groups and bank references</li><li>Unsupported Canvas question types</li><li>Missing answer keys</li><li>Malformed template markers</li><li>Embedded media and complex mathematics</li></ul></div>
+      </div>
+    </section>
+  </main>
+  <footer><div class="wrap"><strong>Brightpoint Community College</strong> · QTI Word Studio · Files are processed locally in your browser.</div></footer>
+  <script src="vendor/jszip.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
