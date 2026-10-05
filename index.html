@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>QTI Word Studio</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="export-options.css">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to converter</a>
@@ -38,7 +39,7 @@
         <ol>
           <li>Export the quiz from Canvas as a QTI ZIP package. Do not unzip it.</li>
           <li>Upload the ZIP below and review the question preview and any warnings.</li>
-          <li>Download the Word document and verify the question text, answer choices, correct answers, points, and feedback.</li>
+          <li>Choose a blank exam, an answer key, or an editable re-upload document.</li>
         </ol>
         <p><strong>Limitations:</strong> Version 1 supports multiple choice, multiple answer, True/False, essay, short answer, and text-only directions. Question-bank references, randomized groups, unsupported question types, embedded media, and complex mathematics may require manual review or may not convert.</p>
       </div>
@@ -50,8 +51,15 @@
       <div id="qti-status" class="status" role="status" aria-live="polite"></div>
       <div id="qti-results" hidden>
         <div class="summary" id="qti-summary"></div>
+        <div class="export-options" aria-labelledby="export-heading">
+          <h3 id="export-heading">Choose a Word file</h3>
+          <div class="export-grid">
+            <div class="export-card"><h4>Blank exam</h4><p>Clean student copy with numbered questions and no answers or converter markers.</p><button id="download-blank" class="primary" type="button">Download blank exam</button></div>
+            <div class="export-card"><h4>Answer key</h4><p>Clean instructor copy with correct responses clearly marked and no converter markers.</p><button id="download-key" class="primary" type="button">Download answer key</button></div>
+            <div class="export-card"><h4>Edit and re-upload</h4><p>Structured document that preserves question types, points, feedback, and required markers.</p><button id="download-editable" class="primary" type="button">Download editable file</button></div>
+          </div>
+        </div>
         <div class="actions">
-          <button id="download-docx" class="primary" type="button">Download Word document</button>
           <button id="reset-qti" class="secondary" type="button">Start over</button>
         </div>
         <div id="qti-warnings" class="warnings" hidden></div>

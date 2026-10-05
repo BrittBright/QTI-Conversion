@@ -10,6 +10,12 @@ Files are processed entirely in the browser. The app has no server, database, an
 
 ## Version 1 scope
 
+QTI-to-Word export options:
+
+- Blank exam: clean student copy without answers or converter markers
+- Answer key: clean instructor copy with correct responses marked
+- Editable re-upload file: structured copy that preserves converter markers, question types, points, and feedback
+
 Supported question types:
 
 - Multiple choice

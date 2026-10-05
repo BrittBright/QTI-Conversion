@@ -83,7 +83,7 @@ function paragraphXml(value,style=""){
   lines.forEach((line,i)=>{if(i)runs.push("<w:r><w:br/></w:r>");runs.push(`<w:r>${style?`<w:rPr>${style}</w:rPr>`:""}<w:t xml:space="preserve">${escapeXml(line)}</w:t></w:r>`)});
   return `<w:p>${runs.join("")}</w:p>`;
 }
-function makeDocumentXml(title,items,template=false){
+function makeEditableDocumentXml(title,items,template=false){
   const body=[paragraphXml(title,"<w:b/><w:sz w:val=\"36\"/>")];
   body.push(paragraphXml(template?"Complete the fields below. Keep bracketed markers intact. Mark correct choices with an asterisk (*).":"Generated from Canvas QTI. Edit using the structured markers to convert this document back to QTI."));
   items.forEach((q,i)=>{
@@ -102,8 +102,27 @@ function makeDocumentXml(title,items,template=false){
   });
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${body.join("")}<w:sectPr><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1080" w:right="1080" w:bottom="1080" w:left="1080"/></w:sectPr></w:body></w:document>`;
 }
-async function makeDocx(title,items,template=false){
-  const zip=new JSZip();zip.file("[Content_Types].xml",`<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>`);zip.folder("_rels").file(".rels",`<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`);zip.folder("word").file("document.xml",makeDocumentXml(title,items,template));return zip.generateAsync({type:"blob",mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
+function makePrintableDocumentXml(title,items,answerKey=false){
+  const body=[paragraphXml(answerKey?`${title} — Answer Key`:title,"<w:b/><w:sz w:val=\"36\"/>")];
+  if(!answerKey)body.push(paragraphXml("Name: ____________________________________    Date: ____________________"));
+  items.forEach((q,i)=>{
+    body.push(paragraphXml(`${i+1}. ${q.stem}`,"<w:b/>"));
+    if(["multiple_choice","multiple_answer","true_false"].includes(q.type)){
+      q.choices.forEach((c,j)=>body.push(paragraphXml(`${answerKey&&c.correct?"✓ ":""}${String.fromCharCode(65+j)}. ${c.text}`,answerKey&&c.correct?"<w:b/>":"")));
+    }else if(q.type==="short_answer"){
+      if(answerKey)body.push(paragraphXml(`Answer: ${(q.answers?.length?q.answers:q.correctText||[]).join(" or ")||"Review manually"}`,"<w:b/>"));
+      else body.push(paragraphXml("________________________________________________________________"));
+    }else if(q.type==="essay"){
+      if(answerKey)body.push(paragraphXml("Answer: Instructor review required.","<w:i/>"));
+      else for(let line=0;line<3;line++)body.push(paragraphXml("________________________________________________________________"));
+    }
+    body.push(paragraphXml(""));
+  });
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${body.join("")}<w:sectPr><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1080" w:right="1080" w:bottom="1080" w:left="1080"/></w:sectPr></w:body></w:document>`;
+}
+async function makeDocx(title,items,mode="editable",template=false){
+  const documentXml=mode==="editable"?makeEditableDocumentXml(title,items,template):makePrintableDocumentXml(title,items,mode==="answer-key");
+  const zip=new JSZip();zip.file("[Content_Types].xml",`<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>`);zip.folder("_rels").file(".rels",`<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`);zip.folder("word").file("document.xml",documentXml);return zip.generateAsync({type:"blob",mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
 }
 function download(blob,name){const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000)}
 function safeName(s){return s.replace(/[^a-z0-9]+/gi,"_").replace(/^_|_$/g,"")||"quiz"}
@@ -174,8 +193,10 @@ async function makeQti(title,items){
 
 function bindDrop(zoneId,inputId,handler){const z=$(zoneId),inp=$(inputId);inp.onchange=()=>inp.files[0]&&handler(inp.files[0]);["dragenter","dragover"].forEach(e=>z.addEventListener(e,x=>{x.preventDefault();z.classList.add("drag")}));["dragleave","drop"].forEach(e=>z.addEventListener(e,x=>{x.preventDefault();z.classList.remove("drag")}));z.addEventListener("drop",e=>e.dataTransfer.files[0]&&handler(e.dataTransfer.files[0]))}
 bindDrop("qti-drop","qti-file",handleQti);bindDrop("word-drop","word-file",handleWord);
-$("download-docx").onclick=async()=>download(await makeDocx(qtiState.title,qtiState.items),`${safeName(qtiState.title)}.docx`);
-$("download-template").onclick=async()=>{const sample=[{number:1,title:"ATP Production",type:"multiple_choice",points:1,stem:"Which organelle is primarily responsible for producing ATP in a eukaryotic cell?",choices:[{text:"Nucleus",correct:false},{text:"Mitochondrion",correct:true},{text:"Ribosome",correct:false},{text:"Golgi apparatus",correct:false}],feedback:"Mitochondria generate most cellular ATP.",supported:true},{number:2,title:"AI Reflection",type:"essay",points:5,stem:"Describe one potential benefit and one potential risk of generative AI.",choices:[],feedback:"",supported:true}];download(await makeDocx("QTI Word Studio Template",sample,true),"QTI_Word_Studio_Template.docx")};
+$("download-blank").onclick=async()=>download(await makeDocx(qtiState.title,qtiState.items,"blank"),`${safeName(qtiState.title)}_Blank_Exam.docx`);
+$("download-key").onclick=async()=>download(await makeDocx(qtiState.title,qtiState.items,"answer-key"),`${safeName(qtiState.title)}_Answer_Key.docx`);
+$("download-editable").onclick=async()=>download(await makeDocx(qtiState.title,qtiState.items,"editable"),`${safeName(qtiState.title)}_Editable_Reupload.docx`);
+$("download-template").onclick=async()=>{const sample=[{number:1,title:"ATP Production",type:"multiple_choice",points:1,stem:"Which organelle is primarily responsible for producing ATP in a eukaryotic cell?",choices:[{text:"Nucleus",correct:false},{text:"Mitochondrion",correct:true},{text:"Ribosome",correct:false},{text:"Golgi apparatus",correct:false}],feedback:"Mitochondria generate most cellular ATP.",supported:true},{number:2,title:"AI Reflection",type:"essay",points:5,stem:"Describe one potential benefit and one potential risk of generative AI.",choices:[],feedback:"",supported:true}];download(await makeDocx("QTI Word Studio Template",sample,"editable",true),"QTI_Word_Studio_Template.docx")};
 $("download-qti").onclick=async()=>{const title=$("quiz-title").value.trim()||"Imported Quiz";download(await makeQti(title,wordState.items),`${safeName(title)}_QTI.zip`)};
 $("reset-qti").onclick=()=>{qtiState=null;$("qti-file").value="";$("qti-results").hidden=true;$("qti-status").textContent=""};
 $("reset-word").onclick=()=>{wordState=null;$("word-file").value="";$("word-results").hidden=true;$("word-status").textContent=""};
