@@ -38,7 +38,7 @@ function parseItem(item,index){
   const stemHtml=firstDirectMaterialText(item);
   const choices=[];
   for(const label of descendants(item,"response_label")){
-    const mt=first(label,"mattext");choices.push({id:label.getAttribute("ident")||uid("a"),text:text(mt),correct:false});
+    const mt=first(label,"mattext");choices.push({id:label.getAttribute("ident")||uid("a"),text:stripHtml(text(mt)),correct:false});
   }
   const correctIds=new Set();
   for(const condition of descendants(item,"respcondition")){
